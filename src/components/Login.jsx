@@ -25,16 +25,31 @@ const Login = ({ setIsAuthenticated }) => {
     setError('');
 
     try {
-      const response = await axios.post('https://makalukkaga.mpeoplesnet.com/api/login', formData);
-      if (response.data.success) {
-        localStorage.setItem('authToken', response.data.token);
+      const response = await axios.post('http://makalukaga-prod.mpeoplesnet.com/api/login', formData);
+      console.log(response.data);
+      
+      // Check if login was successful based on the response structure
+      if (response.data.message === "Login successful") {
+        // Store user data and token
+        localStorage.setItem('authToken', response.data.data.AuthToken);
+        localStorage.setItem('userData', JSON.stringify(response.data.data.system_user));
+        
+        // Update authentication state
         setIsAuthenticated(true);
+        
+        // Route to dashboard
         navigate('/dashboard');
       } else {
-        setError(response.data.message || 'Login failed');
+        // Handle unsuccessful login
+        setError(response.data.message || 'Login failed. Please try again.');
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'An error occurred during login');
+      // Handle errors
+      const errorMessage = err.response?.data?.message || 
+                          err.response?.data?.error || 
+                          'An error occurred during login';
+      setError(errorMessage);
+      console.error('Login error:', err);
     } finally {
       setIsLoading(false);
     }

@@ -1,23 +1,24 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 const SignUp = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    name: "",
-    phone: "",
-    email: "",
-    password: "",
-    UserType: "User", // Default to User
-    referral_code: ""
+    name: '',
+    phone: '',
+    email: '',
+    password: '',
+    UserType: 'User', // Default to User
+    referral_code: ''
   });
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
+    setFormData(prev => ({
       ...prev,
       [name]: value
     }));
@@ -26,24 +27,31 @@ const SignUp = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    setError("");
+    setError('');
+    setSuccessMessage('');
 
     try {
-      console.log(formData);
-
-      const response = await axios.post(
-        "https://makalukkaga.mpeoplesnet.com/api/signup",
-        formData
-      );
-      if (response.data.success) {
-        navigate("/login");
+      const response = await axios.post('http://makalukaga-prod.mpeoplesnet.com/api/signup', formData);
+      
+      // Check if signup was successful based on the response structure
+      if (response.data.status && response.data.message === "Signup successful") {
+        setSuccessMessage('Signup successful! Redirecting to login...');
+        
+        // Wait a moment to show the success message, then redirect
+        setTimeout(() => {
+          navigate('/login');
+        }, 1500);
       } else {
-        setError(response.data.message || "Signup failed");
+        // Handle unsuccessful signup
+        setError(response.data.message || 'Signup failed. Please try again.');
       }
     } catch (err) {
-      setError(
-        err.response?.data?.message || "An error occurred during signup"
-      );
+      // Handle errors
+      const errorMessage = err.response?.data?.message || 
+                          err.response?.data?.error || 
+                          'An error occurred during signup';
+      setError(errorMessage);
+      console.error('Signup error:', err);
     } finally {
       setIsLoading(false);
     }
@@ -53,6 +61,7 @@ const SignUp = () => {
     <div className="auth-container">
       <h2>Sign Up</h2>
       {error && <div className="error-message">{error}</div>}
+      {successMessage && <div className="success-message">{successMessage}</div>}
       <form onSubmit={handleSubmit}>
         <div className="form-group">
           <label>Name:</label>
@@ -116,7 +125,7 @@ const SignUp = () => {
           />
         </div>
         <button type="submit" disabled={isLoading}>
-          {isLoading ? "Signing Up..." : "Sign Up"}
+          {isLoading ? 'Signing Up...' : 'Sign Up'}
         </button>
       </form>
       <p>
